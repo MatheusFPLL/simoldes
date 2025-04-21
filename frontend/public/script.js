@@ -27,6 +27,12 @@ socket.on('maquina_atualizada', (maquina) => {
 // Adicione no início do arquivo
 let authToken = null;
 
+const express = require('express');
+const app = express();
+const path = require('path');
+
+
+
 // Função para fazer login
 async function fazerLogin() {
     const username = prompt('Nome de usuário:');

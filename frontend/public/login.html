@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Simoldes Tools</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-container">
+      <h1 class="login">Login</h1>
+      <p class="welcome">Bem-vindo(a)!</p>
+      <form id="loginForm">
+        <div class="form-group input-container">
+          <img src="images/user.png" alt="Ícone usuário" class="input-icon" />
+          <input type="text" id="username" name="username" placeholder="Usuário" required />
+        </div>
+
+        <div class="form-group input-container">
+          <img src="images/locked.png" alt="Ícone senha" class="input-icon" />
+          <input type="password" id="password" name="password" placeholder="Senha" required />
+        </div>
+
+        <div class="forgot-password">
+          <a href="#">Esqueceu a senha?</a>
+        </div>
+
+        <button type="submit" class="login-button">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          localStorage.setItem('authToken', data.token); // Salva o token
+          window.location.href = '/index.html'; // Redireciona para a página principal
+        } else {
+          alert(data.error || 'Usuário ou senha inválidos.');
+        }
+      } catch (err) {
+        console.error('Erro ao conectar com o servidor:', err);
+        alert('Erro ao conectar

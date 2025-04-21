@@ -10,6 +10,37 @@ const swaggerSpecs = require('./config/swagger');
 
 // Configuração do Express
 const app = express();
+const path = require('path');
+require('dotenv').config();
+
+app.use(express.json());
+
+// Serve o frontend
+app.use(express.static(path.join(__dirname, '../frontend/public')));
+
+// Redireciona / para login.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/public/login.html'));
+});
+
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/public','index.html'));
+});
+
+
+// Rota temporária de login (substitua por lógica real depois)
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+
+  // Simulação de login — depois substitua por verificação com banco de dados
+  if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASSWORD) {
+    return res.status(200).json({ message: 'Login bem-sucedido' });
+  } else {
+    return res.status(401).json({ message: 'Credenciais inválidas' });
+  }
+});
+
+
 const port = process.env.PORT || 3000;
 
 // Middlewares

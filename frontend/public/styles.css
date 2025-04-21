@@ -155,3 +155,121 @@ footer {
     font-size: 0.9rem;
     color: #666;
 }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background: url('images/login.png') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 1366px; /* mesmo tamanho da imagem de fundo */
+  height: 768px;      /* altura exata da imagem de fundo */
+  pointer-events: none; /* evita interferência no layout ao redor */
+}
+
+.login-container {
+  position: absolute;
+  top: 220px;  /* ajuste fino vertical */
+  left: 370px; /* ajuste fino horizontal */
+  right: 970px;
+  width: 650px;
+  height: 350px;
+  background-color: rgb(255, 255, 255);
+  padding: 30px;
+  border-radius: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+  pointer-events: auto; /* permite interagir com inputs dentro */
+}
+
+.login {
+    font-family:  'Nunito', sans-serif;
+    color: #38755e;
+    margin-bottom: 10px;
+    font-size: 30px;
+    text-align: center;
+    font-weight:bold;
+}
+
+.welcome {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 12px 12px 45px;
+  margin: 0 auto;  
+  background-color: rgb(255, 255, 255);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input:focus {
+  outline: none;
+  border-color: #04614d;
+}
+
+.input-container {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.forgot-password {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.forgot-password a {
+    color: #04614d;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight:bold;
+}
+
+.login-button {
+  background-color: #04614d;
+  color: white;
+  border: none;
+  padding: 12px 40px;
+  width: auto;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;           
+}

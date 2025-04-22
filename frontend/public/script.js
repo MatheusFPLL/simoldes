@@ -61,6 +61,7 @@ async function fazerLogin() {
     }
 }
 
+
 // Modifique a função fetchData para incluir o token
 async function fetchData(url) {
     const headers = {};

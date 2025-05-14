@@ -8,27 +8,37 @@ class AuthService {
     }
 
     async login(username, password) {
-        // Em um sistema real, você buscaria o usuário no banco de dados
-        // Aqui estamos usando um usuário fixo para simplificar
         const validUsername = process.env.ADMIN_USER || 'admin';
         const validPassword = process.env.ADMIN_PASSWORD || 'simoldes123';
-        
-        if (username === validUsername && password === validPassword) {
+
+        const isMatch =
+            username === validUsername && password === validPassword;
+
+        if (isMatch) {
             const token = jwt.sign(
                 { username },
                 process.env.JWT_SECRET || 'secret_key_simoldes',
                 { expiresIn: '8h' }
             );
-            return { success: true, token };
+
+            return {
+                success: true,
+                token,
+                user: { username }
+            };
         }
-        
-        return { success: false, message: 'Credenciais inválidas' };
+
+        return {
+            success: false,
+            message: 'Credenciais inválidas'
+        };
     }
 
     verifyToken(token) {
         try {
             return jwt.verify(token, process.env.JWT_SECRET || 'secret_key_simoldes');
-        } catch (error) {
+        } catch (err) {
+            console.error('Erro ao verificar token:', err.message);
             return null;
         }
     }

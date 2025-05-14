@@ -6,17 +6,22 @@ module.exports = (pool) => {
     return (req, res, next) => {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
-        
+
         if (!token) {
             return res.status(401).json({ error: 'Token não fornecido' });
         }
-        
-        const user = authService.verifyToken(token);
-        if (!user) {
+
+        try {
+            const user = authService.verifyToken(token);
+            if (!user) {
+                return res.status(403).json({ error: 'Token inválido' });
+            }
+
+            req.user = user;
+            next();
+        } catch (err) {
+            console.error('Erro na verificação do token:', err);
             return res.status(403).json({ error: 'Token inválido' });
         }
-        
-        req.user = user;
-        next();
     };
 };

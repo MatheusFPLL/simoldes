@@ -1,0 +1,138 @@
+﻿require('dotenv').config();
+if (typeof process.env.DB_PASSWORD !== 'string') {
+  console.error('Erro: DB_PASSWORD não é uma string!');
+  console.error('Valor atual de DB_PASSWORD:', process.env.DB_PASSWORD);
+  process.exit(1); // Encerra o servidor
+}
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const { Pool } = require('pg');
+const http = require('http');
+const socketIo = require('socket.io');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./backend/config/swagger');
+const path = require('path');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+const port = process.env.PORT || 3000;
+
+// Configuração do banco de dados
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+});
+
+// Middlewares globais
+app.use(cors());
+app.use(express.json());
+
+// Middleware de logs (antes de tudo)
+const loggerMiddleware = require('./backend/middleware/logger')(pool);
+app.use(loggerMiddleware);
+
+// Serve arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, './frontend/public')));
+
+// Rotas públicas
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, './frontend/public/login.html'));
+});
+
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, './frontend/public/login.html'));
+});
+
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, './frontend/public/index.html'));
+});
+
+// Serviço de autenticação
+const AuthService = require('./backend/services/authService');
+const authService = new AuthService(pool);
+
+// Endpoint de login
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const result = await authService.login(username, password);
+
+    if (result.success) {
+      res.json({
+        message: 'Login bem-sucedido!',
+        token: result.token,
+        user: username,
+      });
+    } else {
+      res.status(401).json({ error: result.message });
+    }
+  } catch (err) {
+    console.error('Erro no login:', err);
+    res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+});
+
+// Middleware de autenticação (apenas para rotas da API)
+const authMiddleware = require('./backend/middleware/auth')(pool);
+
+// Importação e injeção de modelos
+const Molde = require('./backend/models/Molde');
+const Peca = require('./backend/models/Peca');
+const EstoqueAco = require('./backend/models/EstoqueAco');
+const OrdemCompra = require('./backend/models/OrdemCompra');
+const Processo = require('./backend/models/Processo');
+const Maquina = require('./backend/models/Maquina');
+
+const molde = new Molde(pool);
+const peca = new Peca(pool);
+const estoqueAco = new EstoqueAco(pool);
+const ordemCompra = new OrdemCompra(pool);
+const processo = new Processo(pool);
+const maquina = new Maquina(pool);
+
+// Rotas protegidas
+app.use('/api/moldes', authMiddleware, require('./backend/routes/moldes')(molde));
+app.use('/api/pecas', authMiddleware, require('./backend/routes/pecas')(peca));
+app.use('/api/estoque', authMiddleware, require('./backend/routes/estoque')(estoqueAco));
+app.use('/api/compras', authMiddleware, require('./backend/routes/compras')(ordemCompra));
+app.use('/api/processos', authMiddleware, require('./backend/routes/processos')(processo));
+app.use('/api/maquinas', authMiddleware, require('./backend/routes/maquinas')(maquina));
+app.use('/api/pcp', authMiddleware, require('./backend/routes/pcp')(pool));
+app.use('/api/arquivos', authMiddleware, require('./backend/routes/arquivos')(pool));
+app.use('/api/priorizacao', authMiddleware, require('./backend/routes/priorizacao')(pool));
+app.use('/api/relatorios', authMiddleware, require('./backend/routes/relatorios')(pool));
+app.use('/api/checklists', authMiddleware, require('./backend/routes/checklists')(pool));
+
+// Documentação Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
+// Agendador de tarefas
+const SchedulerService = require('./backend/services/schedulerService');
+const scheduler = new SchedulerService(pool);
+scheduler.start();
+
+// WebSocket (socket.io)
+module.exports.io = io;
+io.on('connection', (socket) => {
+  console.log('Novo cliente conectado');
+  socket.on('disconnect', () => {
+    console.log('Cliente desconectado');
+  });
+});
+
+// Inicialização do servidor
+server.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
+});
+
+// Tratamento global de erros não tratados
+process.on('unhandledRejection', (err) => {
+  console.error('Erro não tratado:', err);
+});

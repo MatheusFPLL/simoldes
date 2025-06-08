@@ -2,11 +2,10 @@
 if (typeof process.env.DB_PASSWORD !== 'string') {
   console.error('Erro: DB_PASSWORD não é uma string!');
   console.error('Valor atual de DB_PASSWORD:', process.env.DB_PASSWORD);
-  process.exit(1); // Encerra o servidor
+  process.exit(1);
 }
 
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const { Pool } = require('pg');
 const http = require('http');
@@ -14,13 +13,14 @@ const socketIo = require('socket.io');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./backend/config/swagger');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 const port = process.env.PORT || 3000;
 
-// Configuração do banco de dados
+// Banco de dados
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -33,29 +33,23 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 
-// Middleware de logs (antes de tudo)
+// Logger customizado
 const loggerMiddleware = require('./backend/middleware/logger')(pool);
 app.use(loggerMiddleware);
 
-// Serve arquivos estáticos do frontend
+// Serve arquivos estáticos
 app.use(express.static(path.join(__dirname, './frontend/public')));
 
-// Rotas públicas
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, './frontend/public/login.html'));
-});
+// Serviços e autenticação
+const AuthService = require('./backend/services/authService');
+const authService = new AuthService(pool);
+app.use('/api', require('./backend/routes/api')(authService));
+const authMiddleware = require('./backend/middleware/auth')(pool);
 
+// ROTAS PÚBLICAS
 app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, './frontend/public/login.html'));
 });
-
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, './frontend/public/index.html'));
-});
-
-// Serviço de autenticação
-const AuthService = require('./backend/services/authService');
-const authService = new AuthService(pool);
 
 // Endpoint de login
 app.post('/api/login', async (req, res) => {
@@ -79,16 +73,29 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Middleware de autenticação (apenas para rotas da API)
-const authMiddleware = require('./backend/middleware/auth')(pool);
+// Página principal (proteção via frontend)
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, './frontend/public/index.html'));
+});
 
-// Importação e injeção de modelos
+// Redireciona "/" para login (padrão inicial)
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
+// LOGOUT
+app.get('/logout', (req, res) => {
+  res.redirect('/login.html');
+});
+
+// MODELOS e INJEÇÃO
 const Molde = require('./backend/models/Molde');
 const Peca = require('./backend/models/Peca');
 const EstoqueAco = require('./backend/models/EstoqueAco');
 const OrdemCompra = require('./backend/models/OrdemCompra');
 const Processo = require('./backend/models/Processo');
 const Maquina = require('./backend/models/Maquina');
+
 
 const molde = new Molde(pool);
 const peca = new Peca(pool);
@@ -97,7 +104,7 @@ const ordemCompra = new OrdemCompra(pool);
 const processo = new Processo(pool);
 const maquina = new Maquina(pool);
 
-// Rotas protegidas
+// ROTAS PROTEGIDAS
 app.use('/api/moldes', authMiddleware, require('./backend/routes/moldes')(molde));
 app.use('/api/pecas', authMiddleware, require('./backend/routes/pecas')(peca));
 app.use('/api/estoque', authMiddleware, require('./backend/routes/estoque')(estoqueAco));
@@ -110,15 +117,15 @@ app.use('/api/priorizacao', authMiddleware, require('./backend/routes/priorizaca
 app.use('/api/relatorios', authMiddleware, require('./backend/routes/relatorios')(pool));
 app.use('/api/checklists', authMiddleware, require('./backend/routes/checklists')(pool));
 
-// Documentação Swagger
+// Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-// Agendador de tarefas
+// Agendador
 const SchedulerService = require('./backend/services/schedulerService');
 const scheduler = new SchedulerService(pool);
 scheduler.start();
 
-// WebSocket (socket.io)
+// WebSocket
 module.exports.io = io;
 io.on('connection', (socket) => {
   console.log('Novo cliente conectado');
@@ -127,12 +134,17 @@ io.on('connection', (socket) => {
   });
 });
 
-// Inicialização do servidor
-server.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+// SPA fallback (para o caso de URLs inválidas)
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, './frontend/public/404.html')); // opcional
 });
 
-// Tratamento global de erros não tratados
+// Erros não tratados
 process.on('unhandledRejection', (err) => {
   console.error('Erro não tratado:', err);
+});
+
+// Inicialização
+server.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
 });

@@ -1,6 +1,7 @@
-﻿const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+﻿const jwt = require('jsonwebtoken');
 require('dotenv').config();
+
+
 
 class AuthService {
     constructor(pool) {
@@ -30,13 +31,16 @@ class AuthService {
 
         return {
             success: false,
-            message: 'Credenciais inválidas'
+            error: 'Credenciais inválidas'
         };
     }
 
-    verifyToken(token) {
+    async verifyToken(token) {
         try {
-            return jwt.verify(token, process.env.JWT_SECRET || 'secret_key_simoldes');
+            return jwt.verify(
+                token,
+                process.env.JWT_SECRET || 'secret_key_simoldes'
+            );
         } catch (err) {
             console.error('Erro ao verificar token:', err.message);
             return null;

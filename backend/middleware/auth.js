@@ -3,7 +3,7 @@
 module.exports = (pool) => {
     const authService = new AuthService(pool);
 
-    return (req, res, next) => {
+    return async (req, res, next) => {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
 
@@ -12,9 +12,9 @@ module.exports = (pool) => {
         }
 
         try {
-            const user = authService.verifyToken(token);
+            const user = await authService.verifyToken(token);
             if (!user) {
-                return res.status(403).json({ error: 'Token inválido' });
+                return res.status(403).json({ error: 'Token inválido ou expirado' });
             }
 
             req.user = user;

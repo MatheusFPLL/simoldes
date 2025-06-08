@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificações - Painel de Controle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            background-image: url('images/login.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        
+        .topbar {
+            background-color: #04614d;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .topbar-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .icons {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .icons img {
+            width: 24px;
+            height: 24px;
+            filter: invert(1);
+        }
+        
+        .container {
+            margin-top: 70px;
+            padding: 20px;
+        }
+        
+        .notifications-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            padding: 25px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(4, 97, 77, 0.2);
+        }
+        
+        .notifications-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #04614d;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(4, 97, 77, 0.2);
+        }
+        
+        .notification-item {
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(4, 97, 77, 0.1);
+        }
+        
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        
+        .notification-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #04614d;
+            margin-bottom: 5px;
+        }
+        
+        .notification-content {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .notification-time {
+            font-size: 12px;
+            color: #777;
+        }
+        
+        .notification-critical {
+            border-left: 4px solid #d32f2f;
+            padding-left: 15px;
+            margin-left: -15px;
+            background-color: rgba(211, 47, 47, 0.05);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .notifications-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-title">Notificações</div>
+        <div class="icons">
+            <a href="notificacoes.html">
+                <img src="images/notification.png" alt="Notificações">
+            </a>
+            <a href="/index.html">
+                <img src="images/logout.png" alt="Sair">
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="notifications-container">
+            <h1 class="notifications-title">Suas Notificações</h1>
+            
+            <div class="notification-item notification-critical">
+                <div class="notification-title">Estoque crítico</div>
+                <div class="notification-content">O aço 1045 está abaixo do nível mínimo no estoque</div>
+                <div class="notification-time">10 minutos atrás</div>
+            </div>
+            
+            <div class="notification-item">
+                <div class="notification-title">Ordem de produção concluída</div>
+                <div class="notification-content">A peça #4587 foi finalizada com sucesso</div>
+                <div class="notification-time">2 horas atrás</div>
+            </div>
+            
+            
+            <div class="notification-item">
+                <div class="notification-title">Novo pedido recebido</div>
+                <div class="notification-content">O cliente ABC Metalurgia fez um novo pedido</div>
+                <div class="notification-time">Ontem, 10:15</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

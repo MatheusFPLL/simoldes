@@ -1,42 +1,358 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Estoque - Simoldes Aço</title>
-    <link rel="stylesheet" href="styles.css">
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    const token = localStorage.getItem('authToken');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simoldes Tools - Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard">
+
+  <div class="sidebar">
+    <img src="images/logo-simoldes.png" alt="Simoldes" class="logo" />
+    <nav>
+      <ul>
+        <li><a href="moldes.html">Moldes em processo</a></li>
+        <li><a href="acos.html">Chegada de aços</a></li>
+        <li><a href="programacao.html">Programação</a></li>
+        <li><a href="pecas.html">Peças</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="compras.html">Compras</a></li>
+        <li><a href="#" id="btnNovosDados">Novo Processo</a></li>
+        <li><a href="#" id="btnEditarProcessos">Editar Processos</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="main-container">
+    <div class="topbar">
+      <div class="topbar-title">Painel de Controle</div>
+      <div class="icons">
+        <a href="notificacoes.html">
+          <img src="images/notification.png" alt="Notificações" class="notification" />
+        </a>
+        <a href="#" id="logoutBtn">
+          <img src="images/logout.png" alt="Logout" class="logout" />
+        </a>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="processo box">
+        <div class="processo-header">PROCESSOS</div>
+        <div class="processo-body">
+          <div class="processo-body">
+  <div class="filtro-container">
+    <form id="form-filtro" class="filtro-form">
+      <input type="text" name="filtro_molde" id="filtro_molde" placeholder="Filtrar por molde..." />
+      <button type="submit" class="submit-button">Filtrar</button>
+      <button type="button" id="btnLimparFiltro" class="submit-button">Limpar</button>
+    </form>
+  </div>
+  <div class="tabela-container">
+          <div class="tabela-container">
+            <table class="tabela-processo">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Molde</th>
+                  <th>Referência</th>
+                  <th>Programa NC</th>
+                  <th>DMG</th>
+                  <th>600 II</th>
+                  <th>800 II</th>
+                  <th>600 I</th>
+                  <th>800 I</th>
+                  <th>IXION II</th>
+                  <th>Observação</th>
+                  <th>Criado em</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <span id="closeModal" class="close-button">&times;</span>
+      <h2>Inserir Novo Processo</h2>
+      <form id="form-processo" class="modal-form">
+        <div class="input-row">
+          <input type="text" name="molde" placeholder="Molde" required />
+          <input type="text" name="referencia" placeholder="Referência" required />
+        </div>
+        <div class="status-wrapper">
+          <label><input type="checkbox" name="programa_nc" /> Programa NC</label>
+          <label><input type="checkbox" name="dmg" /> DMG</label>
+          <label><input type="checkbox" name="seiscentos_ii" /> 600 II</label>
+          <label><input type="checkbox" name="oitocentos_ii" /> 800 II</label>
+          <label><input type="checkbox" name="seiscentos_i" /> 600 I</label>
+          <label><input type="checkbox" name="oitocentos_i" /> 800 I</label>
+          <label><input type="checkbox" name="ixion_ii" /> IXION II</label>
+        </div>
+        <div class="form-right">
+          <textarea name="observacao" placeholder="Observação" required></textarea>
+        </div>
+        <button type="submit" class="submit-button">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Editar Processo -->
+<div id="modal-editar" class="modal hidden">
+  <div class="modal-content">
+    <span id="closeEditarModal" class="close-button">&times;</span>
+    <h2>Editar Processos Existentes</h2>
+    <div id="lista-editar-processos" class="modal-form" style="max-height: 60vh; overflow-y: auto;"></div>
+  </div>
+</div>
+
+
+  
+
+  <script>
+    const token = localStorage.getItem('token');
     if (!token) {
       window.location.href = '/login.html';
     }
+
+    const modal = document.getElementById("modal");
+    const btnNovosDados = document.getElementById("btnNovosDados");
+    const closeModal = document.getElementById("closeModal");
+    const form = document.getElementById('form-processo');
+    const tabelaBody = document.querySelector('.tabela-processo tbody');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    btnNovosDados.onclick = () => modal.classList.remove("hidden");
+    closeModal.onclick = () => {
+      modal.classList.add("hidden");
+      form.reset();
+    };
+    window.onclick = (e) => {
+      if (e.target == modal) {
+        modal.classList.add("hidden");
+        form.reset();
+      }
+    };
+
+    logoutBtn.onclick = () => {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    };
+
+    function atualizarTabelaProcesso(processo) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${processo.id || ''}</td>
+        <td>${processo.molde || ''}</td>
+        <td>${processo.referencia || ''}</td>
+        <td>${processo.programa_nc ? '✔️' : ''}</td>
+        <td>${processo.dmg ? '✔️' : ''}</td>
+        <td>${processo.maquina_600_ii ? '✔️' : ''}</td>
+        <td>${processo.maquina_800_ii ? '✔️' : ''}</td>
+        <td>${processo.maquina_600_i ? '✔️' : ''}</td>
+        <td>${processo.maquina_800_i ? '✔️' : ''}</td>
+        <td>${processo.ixion_ii ? '✔️' : ''}</td>
+        <td>${processo.observacao || ''}</td>
+        <td>${processo.criado_em ? new Date(processo.criado_em).toLocaleString() : ''}</td>
+      `;
+      tabelaBody.prepend(tr);
+    }
+
+     async function carregarProcessos(molde = '') {
+    try {
+      const url = molde ? `/api/processos?molde=${encodeURIComponent(molde)}` : '/api/processos';
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Erro ao buscar processos');
+
+      const processos = await res.json();
+      tabelaBody.innerHTML = '';
+      processos.forEach(atualizarTabelaProcesso);
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao carregar processos. Faça login novamente.');
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+  }
+
+    carregarProcessos();
+
+    // Lógica do filtro de molde
+  const formFiltro = document.getElementById('form-filtro');
+  const inputMolde = document.getElementById('filtro_molde');
+  const btnLimparFiltro = document.getElementById('btnLimparFiltro');
+
+  formFiltro.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const molde = inputMolde.value.trim();
+    carregarProcessos(molde);
+  });
+
+  btnLimparFiltro.addEventListener('click', () => {
+    inputMolde.value = '';
+    carregarProcessos(); // recarrega todos os processos
+  });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const dados = {
+  molde: form.molde.value,
+  referencia: form.referencia.value,
+  programa_nc: form.programa_nc.checked,
+  dmg: form.dmg.checked,
+  maquina_600_ii: form.seiscentos_ii.checked,
+  maquina_800_ii: form.oitocentos_ii.checked,
+  maquina_600_i: form.seiscentos_i.checked,
+  maquina_800_i: form.oitocentos_i.checked,
+  ixion_ii: form.ixion_ii.checked,
+  observacao: form.observacao.value
+};
+
+      try {
+        const res = await fetch('/api/processos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(dados)
+        });
+
+        if (!res.ok) {
+          const erro = await res.json();
+          throw new Error(erro.message || 'Erro ao inserir processo');
+        }
+
+        const novoProcesso = await res.json();
+        alert('Processo inserido com sucesso!');
+        modal.classList.add("hidden");
+        form.reset();
+        atualizarTabelaProcesso(novoProcesso);
+
+      } catch (err) {
+        console.error(err);
+        alert(err.message);
+      }
+    });
+
+    const editarModal = document.getElementById("modal-editar");
+  const btnEditarProcessos = document.getElementById("btnEditarProcessos");
+  const closeEditarModal = document.getElementById("closeEditarModal");
+  const listaEditar = document.getElementById("lista-editar-processos");
+
+  btnEditarProcessos.onclick = async () => {
+    editarModal.classList.remove("hidden");
+    await carregarEditarProcessos();
+  };
+
+  closeEditarModal.onclick = () => editarModal.classList.add("hidden");
+
+  window.addEventListener('click', (e) => {
+    if (e.target === editarModal) {
+      editarModal.classList.add("hidden");
+    }
+  });
+
+  async function carregarEditarProcessos() {
+    listaEditar.innerHTML = '';
+    try {
+      const res = await fetch('/api/processos', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const processos = await res.json();
+
+      processos.forEach(proc => {
+        const div = document.createElement('div');
+        div.classList.add('processo-item');
+        div.style.borderBottom = "1px solid #ccc";
+        div.style.paddingBottom = "1rem";
+        div.style.marginBottom = "1rem";
+
+        div.innerHTML = `
+          <strong>${proc.molde}</strong> - ${proc.referencia}
+          <div>
+            <label><input type="checkbox" ${proc.programa_nc ? 'checked' : ''} data-campo="programa_nc"> Programa NC</label>
+            <label><input type="checkbox" ${proc.dmg ? 'checked' : ''} data-campo="dmg"> DMG</label>
+            <label><input type="checkbox" ${proc.maquina_600_ii ? 'checked' : ''} data-campo="maquina_600_ii"> 600 II</label>
+            <label><input type="checkbox" ${proc.maquina_800_ii ? 'checked' : ''} data-campo="maquina_800_ii"> 800 II</label>
+            <label><input type="checkbox" ${proc.maquina_600_i ? 'checked' : ''} data-campo="maquina_600_i"> 600 I</label>
+            <label><input type="checkbox" ${proc.maquina_800_i ? 'checked' : ''} data-campo="maquina_800_i"> 800 I</label>
+            <label><input type="checkbox" ${proc.ixion_ii ? 'checked' : ''} data-campo="ixion_ii"> IXION II</label>
+          </div>
+          <textarea placeholder="Observação..." data-campo="observacao" rows="2" style="width: 100%;">${proc.observacao || ''}</textarea>
+          <div style="margin-top: 0.5rem;">
+            <button onclick="salvarEdicao(${proc.id}, this.parentNode.parentNode)">Salvar</button>
+            <button onclick="excluirProcesso(${proc.id}, this.parentNode.parentNode)" style="background-color: #e74c3c; color: white;">Excluir</button>
+          </div>
+        `;
+        listaEditar.appendChild(div);
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao carregar processos para edição.');
+    }
+  }
+
+  async function salvarEdicao(id, container) {
+    const checks = container.querySelectorAll('input[type="checkbox"]');
+    const textarea = container.querySelector('textarea');
+    const dados = {};
+
+    checks.forEach(check => {
+      const campo = check.dataset.campo;
+      dados[campo] = check.checked;
+    });
+
+    dados.observacao = textarea.value;
+
+    try {
+      const res = await fetch(`/api/processos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(dados)
+      });
+
+      if (!res.ok) throw new Error('Erro ao atualizar processo');
+      alert('Processo atualizado com sucesso!');
+      carregarProcessos();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao salvar edição.');
+    }
+  }
+
+  async function excluirProcesso(id, container) {
+    if (!confirm('Deseja realmente excluir este processo?')) return;
+
+    try {
+      const res = await fetch(`/api/processos/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('Erro ao excluir');
+      container.remove();
+      alert('Processo excluído com sucesso!');
+      carregarProcessos();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao excluir processo.');
+    }
+  }
   </script>
-  </script>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Gestão de Estoque - Simoldes Aço</h1>
-            <nav>
-                <ul>
-                    <li><a href="#" id="link-moldes">Moldes</a></li>
-                    <li><a href="#" id="link-pecas">Peças</a></li>
-                    <li><a href="#" id="link-estoque">Estoque</a></li>
-                    <li><a href="#" id="link-compras">Compras</a></li>
-                </ul>
-            </nav>
-        </header>
-        
-        <main id="main-content">
-            <!-- Conteúdo será carregado dinamicamente aqui -->
-        </main>
-        
-        <footer>
-            <p>Sistema de Gestão de Estoque - Simoldes Aço © 2023</p>
-        </footer>
-    </div>
-    
-    <script src="script.js0"></script>
+
 </body>
 </html>

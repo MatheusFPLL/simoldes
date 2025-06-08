@@ -36,28 +36,28 @@
       e.preventDefault();
 
       const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
+      const password = document.getElementById('password').value.trim();
 
       try {
         const res = await fetch('/api/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
         });
 
         const data = await res.json();
 
         if (res.ok && data.token) {
-          localStorage.setItem('authToken', data.token); // Salva o token
-          window.location.href = '/index.html'; // Redireciona para a página principal
+          localStorage.setItem('token', data.token);
+          window.location.href = '/index.html';
         } else {
           alert(data.error || 'Usuário ou senha inválidos.');
         }
       } catch (err) {
-        console.error('Erro ao conectar com o servidor:', err);
-        alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
-    }
-  });
-</script>
+        console.error(err);
+        alert('Erro ao conectar. Tente novamente mais tarde.');
+      }
+    });
+  </script>
+</body>
+</html>

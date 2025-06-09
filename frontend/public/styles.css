@@ -520,7 +520,7 @@ body.dashboard {
     .submit-button {
       margin-top: 20px;
       padding: 12px 12px;
-      background-color: #00b386;
+      background-color: #004b8d;
       color: white;
       border: none;
       border-radius: 6px;
@@ -613,3 +613,55 @@ body.dashboard {
   cursor: pointer;
 }
 
+.filtro-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+.filtro-form-wrapper {
+  flex-grow: 1;
+}
+
+.filtro-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.importar-excel-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+#btnImportarExcel,
+label[for="excelInput"] {
+  background-color: #004b8d;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+#btnImportarExcel:hover,
+label[for="excelInput"]:hover {
+  background-color: #004b8d;
+}
+
+.nome-arquivo {
+  font-size: 0.875rem;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -384,15 +384,16 @@ body.dashboard {
     }
     /* Garante que o container da tabela fique dentro do card */
     .tabela-container {
-    height: 100%;               /* Ocupa todo o espaço do body */
-    max-height: 360px;          /* Limite para rolagem interna — ajuste conforme o seu layout */
-    overflow: auto;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 8px;
-    margin: 10px;
-    background-color: #fff;     /* Fundo branco para contraste com as divisórias */
-    }
+  height: 100%;
+  max-height: 420px;      /* ↑ aumentada para caber mais linhas */
+  overflow: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  margin: 10px;
+  background-color: #fff;
+  position: relative;     /* ← NECESSÁRIO para o 'sticky' funcionar */
+}
     
     /* Tabela estilo padrão */
     table {
@@ -411,12 +412,14 @@ body.dashboard {
     
     /* Cabeçalhos fixos com fundo verde escuro */
     th {
-    background-color: #2f5949;
-    color: white;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    }
+  background-color: #2f5949;
+  color: white;
+  position: sticky;
+  top: -9px;                  /* ← Isso "sobe" um pouco o cabeçalho */
+  z-index: 2;
+  border-bottom: 2px solid #ccc;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
     
     /* Alternância de linhas para melhor leitura */
     tr:nth-child(even) {
@@ -530,7 +533,7 @@ body.dashboard {
     }
     
     .submit-button:hover {
-      background-color: #009973;
+      background-color: #6be8;
     }
     
     .status-wrapper {
@@ -613,6 +616,10 @@ body.dashboard {
   cursor: pointer;
 }
 
+.filtro-form .submit-button:hover {
+      background-color: #6be8;
+    }
+
 .filtro-container {
   display: flex;
   justify-content: space-between;
@@ -655,7 +662,7 @@ label[for="excelInput"] {
 
 #btnImportarExcel:hover,
 label[for="excelInput"]:hover {
-  background-color: #004b8d;
+  background-color: #6be8;
 }
 
 .nome-arquivo {
